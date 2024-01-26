@@ -16,15 +16,17 @@ import {
 
 const db = getFirestore(firebase);
 
-const littleBockURL =
-  "https://www.littlebock.fr/user/brewery/brew-session/50501/fermentation";
 const littleBockLogin = "https://www.littlebock.fr/login?redirect=/";
 
 const fetchData = async (cookie) => {
   try {
     const cookieJar = new CookieJar();
     cookieJar.setCookie(cookie, "https://www.littlebock.fr");
-    const response = await got(littleBockURL, { cookieJar });
+
+    console.log(config.littleBockConfig.fermentationURL);
+    const response = await got(config.littleBockConfig.fermentationURL, {
+      cookieJar,
+    });
     const $ = cheerio.load(response.body);
     const mutedValues = [];
     $("div.card-box.card-bordered.text-center")
@@ -56,7 +58,9 @@ const sendPostRequest = async (mutedValues) => {
       );
       return;
     }
-    const ref = doc(collection(db, "fermentation"));
+    const ref = doc(
+      collection(db, "fermentation-" + config.littleBockConfig.fermentationID)
+    );
     const id = ref.id;
     const fermentation2push = new Fermentation(
       id,
@@ -64,9 +68,9 @@ const sendPostRequest = async (mutedValues) => {
       mutedValues[1],
       mutedValues[2],
       mutedValues[3],
-      new Date().getTime
+      new Date().getTime().toString()
     );
-    const { data } = await got.post(config.hostUrl + "/api/new", {
+    await got.post(config.hostUrl + "/api/new", {
       json: fermentation2push,
     });
     console.log("Save success");
@@ -76,10 +80,7 @@ const sendPostRequest = async (mutedValues) => {
 };
 
 const getCookies = async () => {
-  const browser = await puppeteer.launch({
-    headless: false,
-    slowMo: 10,
-  });
+  const browser = await puppeteer.launch({ slowMo: 10 });
   const page = await browser.newPage();
 
   await page.goto(littleBockLogin, { waitUntil: "networkidle0" }); // Remplacez par l'URL réelle
@@ -94,9 +95,10 @@ const getCookies = async () => {
 
   const cookies = await page.cookies();
 
-  await browser.close();
   const llcookie = new Cookie();
-
+  if (page.url() != littleBockLogin) {
+    await browser.close();
+  }
   cookies.forEach((cookie) => {
     if (cookie.name == "PHPSESSID") {
       llcookie.domain = "www.littlebock.fr";

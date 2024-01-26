@@ -15,6 +15,8 @@ const {
   APP_ID,
   USERNAME,
   PASSWORD,
+  FERMENTATION_URL,
+  FERMENTATION_ID,
 } = process.env;
 
 assert(PORT, "Port is required");
@@ -35,5 +37,7 @@ export default {
   littleBockConfig: {
     username: USERNAME,
     password: PASSWORD,
+    fermentationURL: FERMENTATION_URL,
+    fermentationID: FERMENTATION_ID,
   },
 };

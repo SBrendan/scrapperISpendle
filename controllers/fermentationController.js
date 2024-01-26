@@ -1,13 +1,16 @@
 import firebase from "../firebase.js";
 import Fermentation from "../models/fermentationModel.js";
 import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
-
+import config from "../config.js";
 const db = getFirestore(firebase);
 
 export const createFermentation = async (req, res, next) => {
   try {
     const data = req.body;
-    await addDoc(collection(db, "fermentations"), data);
+    await addDoc(
+      collection(db, "fermentation_" + config.littleBockConfig.fermentationID),
+      data
+    );
     res.status(200).send("fermentation created successfully");
   } catch (error) {
     res.status(400).send(error.message);
@@ -16,7 +19,9 @@ export const createFermentation = async (req, res, next) => {
 
 export const getFermentations = async (req, res, next) => {
   try {
-    const fermentations = await getDocs(collection(db, "fermentations"));
+    const fermentations = await getDocs(
+      collection(db, "fermentation_" + config.littleBockConfig.fermentationID)
+    );
     const fermentationArray = [];
 
     if (fermentations.empty) {
